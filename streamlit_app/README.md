@@ -114,7 +114,9 @@ streamlit run app.py
 
 ## Author
 
-Anish Choudhury
+- Anish Choudhury
+- Krishna Sindhu Karri
+- Praseeda Saripalle
 
 MS Applied Data Science
 
