@@ -6,8 +6,8 @@
 
 Global food security has become one of the world's most pressing challenges due to rapid population growth, climate variability, and increasing pressure on agricultural resources. Traditional agricultural planning primarily relies on historical reporting and reactive decision-making, making it difficult to anticipate future food shortages.
 
-This capstone project aims to develop an **end-to-end machine learning framework** for predicting global crop production using historical **FAOSTAT** datasets and analyzing food security indicators. The project integrates agricultural production, demographic, environmental, and food security data to generate predictive insights that can support evidence-based agricultural planning and policy decisions.
 
+This capstone project develops an end-to-end machine learning framework for predicting global crop production using historical FAOSTAT datasets and analyzing food security indicators. The project integrates agricultural production, demographic, land use, fertilizer, and food security data to generate predictive insights through machine learning and an interactive Streamlit dashboard.
 ---
 
 ## 🎯 Problem Statement
@@ -22,7 +22,7 @@ The objective is to build predictive machine learning models capable of forecast
 
 - Forecast global crop production using historical FAOSTAT data.
 - Analyze the relationship between crop production and food security indicators.
-- Compare multiple machine learning regression models.
+- Compare four regression models and select the best-performing model.
 - Identify key factors influencing crop production.
 - Develop an interactive Streamlit dashboard for visualization and prediction.
 - Deliver a reproducible end-to-end data science solution.
@@ -80,7 +80,6 @@ https://www.fao.org/faostat/
 
 - Scikit-learn
 - XGBoost
-- LightGBM
 
 ## Dashboard
 
@@ -139,7 +138,6 @@ The following regression models will be evaluated:
 - Decision Tree Regressor
 - Random Forest Regressor
 - XGBoost Regressor
-- LightGBM Regressor
 
 Performance will be compared using
 
@@ -149,9 +147,23 @@ Performance will be compared using
 
 ---
 
+## 🏆 Final Selected Model
+
+The Linear Regression model achieved the highest R² score among the evaluated models and was selected as the final deployment model.
+
+Final evaluation metrics:
+
+| Metric | Value |
+|--------|-------:|
+| R² Score | 0.0637 |
+| MAE | 4,084,985.80 |
+| RMSE | 28,860,372.08 |
+
+---
+
 # 📂 Repository Structure
 
-```
+
 project/
 │
 ├── data/
