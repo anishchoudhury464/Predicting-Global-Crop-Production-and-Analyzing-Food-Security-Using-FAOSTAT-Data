@@ -16,7 +16,8 @@ import os
 
 @st.cache_data
 def load_data():
-    path = os.path.join("data", "clean_dataset.csv")
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(BASE_DIR, "data", "clean_dataset.csv")
     df = pd.read_csv(path)
     return df
 
@@ -25,7 +26,12 @@ df = load_data()
 
 @st.cache_resource
 def load_model():
-    model = joblib.load("model/best_crop_production_model.pkl")
+    MODEL_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "model",
+    "best_crop_production_model.pkl"
+    )
+    model = joblib.load(MODEL_PATH)
     return model
 
 model = load_model()
@@ -33,7 +39,12 @@ model = load_model()
 
 @st.cache_resource
 def load_feature_names():
-    return joblib.load("model/feature_names.pkl")
+    FEATURE_PATH = os.path.join(
+        os.path.dirname(__file__),
+        "model",
+        "feature_names.pkl"
+    )
+    return joblib.load(FEATURE_PATH)
 feature_names = load_feature_names()
 
 
