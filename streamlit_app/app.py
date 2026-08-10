@@ -14,22 +14,82 @@ import os
 # LOAD DATASET
 # -------------------------------
 
+# -------------------------------
+# LOAD DASHBOARD DATA
+# -------------------------------
+
 @st.cache_data
 def load_data():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    path = os.path.join(BASE_DIR, "data", "clean_dataset.csv")
-    df = pd.read_csv(path)
-    return df
+
+    path = os.path.join(
+        BASE_DIR,
+        "data",
+        "dashboard_data.csv"
+    )
+
+    return pd.read_csv(path)
 
 df = load_data()
 
+
+# -------------------------------
+# LOAD PRE-COMPUTED SUMMARIES
+# -------------------------------
+
 @st.cache_data
-def get_yearly_production(df):
-    return (
-        df.groupby("Year")["Production"]
-        .sum()
-        .reset_index()
+def load_yearly_production():
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    path = os.path.join(
+        BASE_DIR,
+        "data",
+        "yearly_production.csv"
     )
+
+    return pd.read_csv(path)
+
+
+@st.cache_data
+def load_country_production():
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    path = os.path.join(
+        BASE_DIR,
+        "data",
+        "country_production.csv"
+    )
+
+    return pd.read_csv(path)
+
+
+@st.cache_data
+def load_country_year_production():
+
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    path = os.path.join(
+        BASE_DIR,
+        "data",
+        "country_year_production.csv"
+    )
+
+    return pd.read_csv(path)
+
+
+yearly_production_data = load_yearly_production()
+country_production_data = load_country_production()
+country_year_production_data = load_country_year_production()
+
+# @st.cache_data
+# def get_yearly_production(df):
+#     return (
+#         df.groupby("Year")["Production"]
+#         .sum()
+#         .reset_index()
+#     )
 
 @st.cache_resource
 def load_model():
@@ -164,7 +224,7 @@ if page == "📊 Dataset Explorer":
 
     st.dataframe(
         filtered_df.head(100),
-        use_container_width=True
+        width="stretch"
     )
 
 
@@ -187,7 +247,7 @@ if page == "📊 Dataset Explorer":
 
     st.dataframe(
         column_info,
-        use_container_width=True
+        width="stretch"
     )
 
     st.subheader("Summary Statistics")
@@ -199,7 +259,7 @@ if page == "📊 Dataset Explorer":
 
     st.dataframe(
     sample_df.describe().round(2),
-    use_container_width=True
+    width="stretch"
     )
 
     
@@ -222,7 +282,7 @@ if page == "📈 Visualizations":
 
     st.subheader("🌾 Global Crop Production Over Time")
 
-    yearly_production = get_yearly_production(df)
+    yearly_production = yearly_production_data
 
     fig1 = px.line(
         yearly_production,
@@ -273,14 +333,14 @@ if page == "📈 Visualizations":
         "Small Island Developing States"
     ]
 
-    country_df = df[~df["Area"].isin(exclude_regions)]
+    country_df = country_production_data[
+    ~country_production_data["Area"].isin(exclude_regions)
+    ]
 
     top_countries = (
-    df.loc[~df["Area"].isin(exclude_regions)]
-      .groupby("Area")["Production"]
-      .sum()
-      .nlargest(10)
-      .reset_index()
+        country_df
+        .nlargest(10, "Production")
+        .reset_index(drop=True)
     )
 
     fig2 = px.bar(
@@ -298,7 +358,7 @@ if page == "📈 Visualizations":
         height=550
     )
 
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig2, width="stretch")
 
     st.markdown("---")
 
@@ -308,11 +368,16 @@ if page == "📈 Visualizations":
 
     st.subheader("📊 Production Distribution")
 
-    hist_df = (
-    df.loc[df["Production"] > 0, ["Production"]]
-      .sample(min(100000, len(df)), random_state=42)
-    )
+    hist_df = df.loc[
+    df["Production"] > 0,
+    ["Production"]
+    ].copy()
 
+    hist_df = hist_df.sample(
+        min(100000, len(hist_df)),
+        random_state=42
+    )
+    
     hist_df["Log_Production"] = np.log10(hist_df["Production"])
 
 
@@ -329,7 +394,7 @@ if page == "📈 Visualizations":
         height=500
     )
 
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig3, width="stretch")
 
     st.markdown("---")
 
@@ -339,12 +404,12 @@ if page == "📈 Visualizations":
 
     st.subheader("🔥 Feature Correlation")
 
-    sample_df = df.sample(
-    min(100000, len(df)),
-    random_state=42
-    )
+    numeric_df = df.select_dtypes(include="number")
 
-    numeric_df = sample_df.select_dtypes(include="number")
+    numeric_df = numeric_df.sample(
+        min(50000, len(numeric_df)),
+        random_state=42
+    )
 
     corr = numeric_df.corr(numeric_only=True)
 
@@ -363,7 +428,7 @@ if page == "📈 Visualizations":
 
     st.plotly_chart(
     fig4,
-    use_container_width=True
+    width="stretch"
     )
 
     st.markdown("---")
@@ -376,13 +441,11 @@ if page == "📈 Visualizations":
         key="country_trend"
     )
 
-    country_df = df[df["Area"] == country]
+    # country_df = df[df["Area"] == country]
 
-    country_year = (
-        country_df.groupby("Year")["Production"]
-        .sum()
-        .reset_index()
-    )
+    country_year = country_year_production_data[
+    country_year_production_data["Area"] == country
+    ].copy()
 
     fig5 = px.line(
         country_year,
@@ -397,7 +460,7 @@ if page == "📈 Visualizations":
     height=550
     )
 
-    st.plotly_chart(fig5, use_container_width=True)
+    st.plotly_chart(fig5, width="stretch")
 
     csv = country_year.to_csv(index=False).encode("utf-8")
 
@@ -578,7 +641,7 @@ if page == "📉 Model Performance":
         xaxis_title="Model"
     )
 
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     st.subheader("Evaluation Metrics")
 
@@ -620,7 +683,7 @@ if page == "📉 Model Performance":
             "RMSE":"{:,.2f}",
             "R²":"{:.4f}"
         }),
-        use_container_width=True
+        width="stretch"
     )
 
     st.markdown("---")
