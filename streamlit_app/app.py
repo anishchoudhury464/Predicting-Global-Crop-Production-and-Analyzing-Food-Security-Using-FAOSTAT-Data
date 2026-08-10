@@ -23,6 +23,13 @@ def load_data():
 
 df = load_data()
 
+@st.cache_data
+def get_yearly_production(df):
+    return (
+        df.groupby("Year")["Production"]
+        .sum()
+        .reset_index()
+    )
 
 @st.cache_resource
 def load_model():
@@ -161,9 +168,12 @@ if page == "📊 Dataset Explorer":
     )
 
 
+    csv = filtered_df.to_csv(index=False).encode("utf-8")
+
+
     st.download_button(
     label="📥 Download Filtered Dataset",
-    data=filtered_df.to_csv(index=False),
+    data=csv,
     file_name=f"{country}_dataset.csv",
     mime="text/csv"
     )
@@ -182,8 +192,13 @@ if page == "📊 Dataset Explorer":
 
     st.subheader("Summary Statistics")
 
+    sample_df = df.sample(
+    min(100000, len(df)),
+    random_state=42
+    )   
+
     st.dataframe(
-    df.describe().round(2),
+    sample_df.describe().round(2),
     use_container_width=True
     )
 
@@ -207,11 +222,7 @@ if page == "📈 Visualizations":
 
     st.subheader("🌾 Global Crop Production Over Time")
 
-    yearly_production = (
-        df.groupby("Year")["Production"]
-        .sum()
-        .reset_index()
-    )
+    yearly_production = get_yearly_production(df)
 
     fig1 = px.line(
         yearly_production,
@@ -226,7 +237,7 @@ if page == "📈 Visualizations":
     height=550
     )
 
-    st.plotly_chart(fig1, use_container_width=True)
+    st.plotly_chart(fig1, width="stretch")
 
     st.markdown("---")
 
@@ -265,10 +276,11 @@ if page == "📈 Visualizations":
     country_df = df[~df["Area"].isin(exclude_regions)]
 
     top_countries = (
-        country_df.groupby("Area")["Production"]
-        .sum()
-        .nlargest(10)
-        .reset_index()
+    df.loc[~df["Area"].isin(exclude_regions)]
+      .groupby("Area")["Production"]
+      .sum()
+      .nlargest(10)
+      .reset_index()
     )
 
     fig2 = px.bar(
@@ -296,9 +308,13 @@ if page == "📈 Visualizations":
 
     st.subheader("📊 Production Distribution")
 
-    hist_df = df[df["Production"] > 0].copy()
+    hist_df = (
+    df.loc[df["Production"] > 0, ["Production"]]
+      .sample(min(100000, len(df)), random_state=42)
+    )
 
     hist_df["Log_Production"] = np.log10(hist_df["Production"])
+
 
     fig3 = px.histogram(
         hist_df,
@@ -323,9 +339,15 @@ if page == "📈 Visualizations":
 
     st.subheader("🔥 Feature Correlation")
 
-    numeric_df = df.select_dtypes(include="number")
+    sample_df = df.sample(
+    min(100000, len(df)),
+    random_state=42
+    )
+
+    numeric_df = sample_df.select_dtypes(include="number")
 
     corr = numeric_df.corr(numeric_only=True)
+
 
     fig4 = px.imshow(
         corr.round(2),
@@ -377,7 +399,7 @@ if page == "📈 Visualizations":
 
     st.plotly_chart(fig5, use_container_width=True)
 
-    csv = country_year.to_csv(index=False)
+    csv = country_year.to_csv(index=False).encode("utf-8")
 
     st.download_button(
         "📥 Download Country Trend",
